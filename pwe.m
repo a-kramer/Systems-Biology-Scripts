@@ -14,18 +14,18 @@ function [varargout]=pwe(val,dval,varargin)
 s=floor(log10(val));  % magnitude of value
 ds=ceil(log10(dval)); % magnitude of uncertainty
 digits=s-ds+2;
-x=" × ";
+x=' × ';
 for i=1:2:length(varargin)
  opt=varargin{i};
  switch opt
  case {'x','separator','E'}
   x=varargin{i+1};
  otherwise
-  printf("known options are: \n");
-  printf("%s\n",{'x','separator','E'});
+  printf('known options are: \n');
+  printf('%s\n',{'x','separator','E'});
  endswitch
 end%for
-fmt=sprintf("%%%i.%if(%%i)%s10^{%i}\n",digits+1,digits,x,s);
+fmt=sprintf('%%%i.%if(%%i)%s10^{%i}\n',digits+1,digits,x,s);
 if (nargout==1)
   varargout{1}=sprintf(strtrim(fmt),val*10^(-s),round(dval*10^(2-ds)));
 else

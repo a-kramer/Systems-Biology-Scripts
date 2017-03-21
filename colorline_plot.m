@@ -1,10 +1,10 @@
 function [fh]=colorline_plot(x,Sample,P,varargin)
-# Usage: colorline_plot(x,Sample,P,...)
-# Sample is a set of sampled one dimensional lines Sample(:,i), each having a probability/weight P(i)
-# columns(Sample)==length(P);
-# The lines are coloured using the range of these weights; from min(P) to max(P).
-# The lines will be reordered such that the most probable line (heighest weight) is drawn last and covers the less probable lines.
-#
+% Usage: colorline_plot(x,Sample,P,[colormap])
+% Sample is a set of sampled one dimensional lines Sample(:,i), each having a probability/weight P(i)
+% columns(Sample)==length(P);
+% The lines are coloured using the range of these weights; from min(P) to max(P).
+% The lines will be reordered such that the most probable line (heighest weight) is drawn last and covers the less probable lines.
+% the default colormap is flipped bone: flipud(colormap('bone')).
  set(gcf, 'DefaultLineLineWidth', 3);
  hold on;
  [m,n]=size(Sample);
@@ -13,7 +13,7 @@ function [fh]=colorline_plot(x,Sample,P,varargin)
   CMAP=varargin{1};
  else
   CMAP=flipud(colormap('bone'));
- endif
+ end%if
  c=rows(CMAP);
  printf("range: [%i,%i]\n",s(1),s(n));
  lsc=linspace(s(1),s(n),c);
@@ -21,4 +21,4 @@ function [fh]=colorline_plot(x,Sample,P,varargin)
  set(gca,"ColorOrder",color_order);
  plot(x,Sample(:,I));
  hold off;
-endfunction
+end%function

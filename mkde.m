@@ -1,6 +1,5 @@
 function [kde]=mkde(X)
-% Copyright (C) 2010 Andrei Kramer <andrei.kramer@ist.uni-stuttgart.de>
-%
+% multivariate kernel densitiy estimator
 % Usage: [kde]=mkde(X)
 % X: Sample
 %    either rows or columns represent sample members

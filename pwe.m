@@ -11,5 +11,5 @@ if (nargout==1)
   varargout{1}=sprintf(strtrim(fmt),val*10^(-s),round(dval*10^(2-ds)));
 else
   printf(fmt,val*10^(-s),round(dval*10^(2-ds)));
-endif
-endfunction
+end%if
+end%function

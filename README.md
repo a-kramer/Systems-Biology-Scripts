@@ -22,7 +22,7 @@ vector. It will plot model trajectories coloured the same way as in
 ## pwe.m
 prints a value and it's uncertainty using concise error notation, like this:
 ```octave
-#1.0045(38) = 1.0045 ± 0.0038
+#1.0045(38) = (1.0045 ± 0.0038) × 10⁰
  pwe(1.00452193847298,0.003820934870293)
  1.0045(38) × 10^{0}
 ```    

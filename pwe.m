@@ -9,9 +9,9 @@ function [varargout]=pwe(val,dval,varargin)
 ##  {'separator','E','x'} sets the string that separates the value from
 ##                        the magnitude. The default is ' × '
 ##  example: pwe(0.001,0.0001,'separator','\\times ')
-##  will print: 1.000(100)\times 10^{-3}
+##  will print: 1.00(10)\times 10^{-3}
 ##
-s=floor(log10(val));  # magnitude of value
+s=floor(log10(abs(val)));  # magnitude of value
 ds=ceil(log10(dval)); # magnitude of uncertainty
 digits=s-ds+2;
 x=" × ";

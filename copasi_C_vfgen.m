@@ -72,6 +72,7 @@ function copasi_C_vfgen(file,varargin)
   fclose(fid);
 ## write some GNU Octave files directly
   Model.Name=ModelName;
+  Model.size=S;
   Model.Description=ModelDescription;
   Model.ic=ic;
   Model.Assign=A;
@@ -92,22 +93,22 @@ function make_Octave_model(Model)
   fprintf(fid,"# %s\n# %s\n",Model.Name,Model.Description);
   fprintf(fid,"if (exist(\"%s\",'var'))\n\terror('Model %s already exists.');\nendif\n\n",Model.Name,Model.Name);
   fprintf(fid,"%s.id.x={",Model.Name);
-  for i=1:length(Model.identifiers.x)
+  for i=1:Model.size.x
     fprintf(fid," \"%s\" ",Model.identifiers.x{i});
   endfor
   fprintf(fid,"};\n");
   fprintf(fid,"%s.id.p={",Model.Name);
-  for i=1:length(Model.identifiers.p)
+  for i=1:Model.size.p
     fprintf(fid," \"%s\" ",Model.identifiers.p{i});
   endfor
   fprintf(fid,"};\n");
   fprintf(fid,"%s.id.ct={",Model.Name);
-  for i=1:length(Model.identifiers.ct)
+  for i=1:Model.size.ct
     fprintf(fid," \"%s\" ",Model.identifiers.ct{i});
   endfor
   fprintf(fid,"};\n");
   fprintf(fid,"%s.id.y={",Model.Name);
-  for i=1:length(Model.identifiers.y)
+  for i=1:Model.size.y
     fprintf(fid," \"%s\" ",Model.identifiers.y{i});
   endfor
   fprintf(fid,"};\n");
@@ -117,21 +118,21 @@ function make_Octave_model(Model)
   endfor
   fprintf(fid,"];\n");
   fprintf(fid,"%s.InitialConditions=[",Model.Name);
-  for i=1:length(Model.ic)
+  for i=1:Model.size.x
     fprintf(fid," %g; ",Model.ic(i));
   endfor
   fprintf(fid,"];\n");
   fprintf(fid,"%s.ConservedTotals=[",Model.Name);
-  for i=1:length(Model.Fixed.ct)
+  for i=1:Model.size.ct
     fprintf(fid," %g; ",Model.Fixed.ct(i));
   endfor
   fprintf(fid,"];\n");
   
   
-  fprintf(fid,"%s.nx=%i;\n",Model.Name,length(Model.identifiers.x));
-  fprintf(fid,"%s.ny=%i;\n",Model.Name,length(Model.identifiers.y));
+  fprintf(fid,"%s.nx=%i;\n",Model.Name,Model.size.x);
+  fprintf(fid,"%s.ny=%i;\n",Model.Name,Model.size.y);
   fprintf(fid,"%s.nr=%i;\n",Model.Name,length(Model.Flux));
-  fprintf(fid,"%s.np=%i;\n\n",Model.Name,length(Model.identifiers.p));
+  fprintf(fid,"%s.np=%i;\n\n",Model.Name,Model.size.p);
   fprintf(fid,"p=rand(%i,1);# this is an example for parametrisation\n",length(Model.identifiers.p))
   fprintf(fid,"%s.f=@(x,t) %s_f(%s_flux(x,t,p));\n",Model.Name,Model.Name,Model.Name);
   fprintf(fid,"function ReactionFlux=%s_flux(x_c,t,p)\n## Usage: %s_flux(x_c,t,p);\n##This function calculates the fluxes of the Model given concentrations x_c, time t and parameters p.\n",Model.Name,Model.Name);
@@ -139,9 +140,9 @@ function make_Octave_model(Model)
     fprintf(fid,"ct(%i)=%g; # %s\n",i,Model.Fixed.ct(i),Model.identifiers.ct{i});
   endfor
   ##  A=struct("id",num2cell([1:N]),"annotation",[],"expression",[],"index",[],"name",[]);
-  {Model.Assign.name}
-  i_y=strcmp({Model.Assign.annotation},'y')
-  assign={Model.Assign.raw}(i_y)
+  ##{Model.Assign.name}
+  i_y=strcmp({Model.Assign.annotation},'y');
+  assign={Model.Assign.raw}(i_y);
   [m_s, m_e, token_extent, match_text, token, ~, token_complement] = regexp(assign,'\[(\d+)\]');
   for i=1:length(token)
     ie=cellfun(@str2num,cat(2,token{i}{:}))+1; # to compensate for C indexing starting at 0
@@ -168,10 +169,10 @@ function make_Octave_model(Model)
   fprintf(fid,"xdot=zeros(%i,1);\n",length(Model.identifiers.x));
   for i=1:length(Model.ODE);
     ODE=Model.ODE(i).rhs;
-    printf("ODE-rhs[%i]: «%s»\n",i,ODE);
+    ##printf("ODE-rhs[%i]: «%s»\n",i,ODE);
     for j=1:length(Model.Flux)
       pattern=regexptranslate('escape',Model.Flux(j).raw);
-      printf("replacing «%s»\n",pattern);
+      ##printf("replacing «%s»\n",pattern);
       ODE=regexprep(ODE,pattern,sprintf("ReactionFlux(%i)",j));
     endfor
     ##ODE=regexprep(ODE,"(\*p)?\\[0\\]",sprintf("p(1)")); # reindex the compartment parameter p[0] as p(1) as arrays start at 1 in Octave

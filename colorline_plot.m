@@ -1,5 +1,5 @@
-function [fh]=colorline_plot(x,Sample,P,varargin)
-# Usage: colorline_plot(x,Sample,P,...)
+function colorline_plot(x,Sample,P,varargin)
+# Usage: colorline_plot(x,Sample,P,[colormap])
 # Sample is a set of sampled one dimensional lines Sample(:,i), each having a probability/weight P(i)
 # columns(Sample)==length(P);
 # The lines are coloured using the range of these weights; from min(P) to max(P).
@@ -18,11 +18,11 @@ function [fh]=colorline_plot(x,Sample,P,varargin)
  lsc=linspace(s(1),s(n),c);
  color_order=interp1(lsc,CMAP,s,"linear");
  ## sometimes, a strange thing happens where color_order contains weird values.
- if any(color_order(:)>1) || any(color_order<0)
-   color_order
-   color_order(color_order>1)=1;
-   color_order(color_order<0)=0;
- endif
+ ## if any(color_order(:)>1) || any(color_order<0)
+ ##   color_order
+ ##   color_order(color_order>1)=1;
+ ##   color_order(color_order<0)=0;
+ ## endif
  set(gca,"ColorOrder",color_order);
  plot(x,Sample(:,I));
  hold off;

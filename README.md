@@ -19,6 +19,16 @@ similar to pcplot but accepts an additional x-axis
 vector. It will plot model trajectories coloured the same way as in
 `pcplot`.
 
+## get_thermodynamic_constraints.m
+calculates the relationships of equilibrium constants as described here:
+```
+Vlad, Marcel O., and John Ross. "Thermodynamically based constraints for rate coefficients of large biochemical networks." 
+Wiley Interdisciplinary Reviews: Systems Biology and Medicine 1.3 (2009): 348-358.
+```
+
+## conservation_laws.m
+prints particle conservation laws in systems biology models. This function constructs a stoichiometric matrix given a function that maps fluxes onto the ode-rhs vectro field.
+
 ## pwe.m
 prints a value and it's uncertainty using concise error notation, like this:
 ```octave
@@ -27,3 +37,5 @@ prints a value and it's uncertainty using concise error notation, like this:
  1.0045(38) × 10^{0}
 ```    
 which saves space with accurate measurements.
+
+

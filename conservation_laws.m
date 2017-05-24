@@ -1,13 +1,16 @@
-function conservation_laws(Model,varargin)
+function N=conservation_laws(Model,varargin)
+## Andrei Kramer <andreikr@kth.se>
+##
 ## Usage: conservation_laws(Model,['test'])
 ##
-## Model.flux(x,t,p): reaction fluxes, needed for testing, with lsode
+## Model.flux(x,t,p): reaction fluxes, needed for testing, with lsode (pass the optional 'test' argument)
 ## Model.f(flux): function that converts fluxes to ODE right-hand-side
 ## Model.x_names: names of state variables
 ## Model.ns: number of state variables
 ## Model.nr: number of reactions
 ## Model.np: number of parameters
-
+##
+ 
 ## get stoichiometry from fluxes
 N=get_stoichiometry(Model);
 n=get_laws(N,Model.x_names);

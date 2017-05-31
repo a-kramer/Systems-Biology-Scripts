@@ -1,7 +1,7 @@
 function N=conservation_laws(Model,varargin)
 ## Andrei Kramer <andreikr@kth.se>
 ##
-## Usage: conservation_laws(Model,['test'])
+## Usage 1: N=conservation_laws(Model,['test'])
 ##
 ## Model.flux(x,t,p): reaction fluxes, needed for testing, with lsode (pass the optional 'test' argument)
 ## Model.f(flux): function that converts fluxes to ODE right-hand-side
@@ -10,10 +10,31 @@ function N=conservation_laws(Model,varargin)
 ## Model.nr: number of reactions
 ## Model.np: number of parameters
 ##
- 
-## get stoichiometry from fluxes
-N=get_stoichiometry(Model);
-n=get_laws(N,Model.x_names);
+## returns stoichiometry matrix N
+##
+## Usage 2: conservation_laws(N,[substances])
+## where
+##           N: known stoichiometry matrix
+##  substances: cell array of strings (substance names)
+
+
+if ismatrix(Model)
+ N=Model;
+ if nargin>1
+  substances=varargin{1};
+ else
+  ns=rows(N);
+  s=strsplit(sprintf("x_%i,",[1:ns]),',');
+  substances=s(1:ns);
+ endif
+elseif isstruct(Model) && isfield(Model,'f')
+ ## get stoichiometry from fluxes 
+ N=get_stoichiometry(Model);
+ substances=Model.x_names;
+ ns=Model.ns;
+endif
+
+n=get_laws(N,substances);
 if (nargin>1 && strcmp(varargin{1},'test'))
  p=rand(Model.np,1);
  x0=rand(Model.ns,1);

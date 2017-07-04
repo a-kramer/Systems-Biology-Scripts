@@ -18,7 +18,7 @@ function N=conservation_laws(Model,varargin)
 ##  substances: cell array of strings (substance names)
 
 
-if ismatrix(Model)
+if !isstruct(Model) && isnumeric(Model)
  N=Model;
  if nargin>1
   substances=varargin{1};

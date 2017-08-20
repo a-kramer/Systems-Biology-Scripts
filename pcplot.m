@@ -6,7 +6,6 @@ function pcplot(Sample,P,varargin)
 % each column of Sample corresponds to one probability/weight number in P
 % columns(Sample)==length(P);
 % P can be a weight of any kind, also logarithmic (negative values are accepted).
- set(gcf, 'DefaultLineLineWidth', 3);
  hold on;
  [m,n]=size(Sample);
  [s,I]=sort(P);

@@ -56,15 +56,13 @@ function n_rref=get_laws(N,substances)
 
 n=null(N');
 n_rref=rref(n')';
-if (norm(n_rref-round(n_rref)) < 1e-6)
- n_rref=round(n_rref);
-else
- warning("nullspace is not represented by integers.\
-        \nTo make the mass conservation more readable, we multiply them by 100 and round.\
-        \nThe output can be interpreted as given in percentages.");
- n_rref=round(100*n_rref);
-endif
-
+n_r=n_rref;
+count=0;
+while (norm(n_r-round(n_r)) > 1e-6 && count++<3)
+  warning("nullspace is not represented by integers. \nTo make the mass conservation more readable, we multiply them by 10 and round.");
+  n_r*=10;
+endwhile
+n_rref=round(n_r);
 c=columns(n_rref);
 Y=cell(c,2);
 s='+-';

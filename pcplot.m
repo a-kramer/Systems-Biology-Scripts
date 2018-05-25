@@ -7,6 +7,7 @@ function pcplot(Sample,P,varargin)
 % columns(Sample)==length(P);
  hold on;
  [m,n]=size(Sample);
+ assert(n==length(P),true);
  [s,I]=sort(P);
  if (nargin>2)
   CMAP=varargin{1};

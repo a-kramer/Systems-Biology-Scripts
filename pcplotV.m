@@ -10,11 +10,23 @@ function pcplotV(Sample,P,varargin)
  assert(n==length(P),true);
  [s,I]=sort(P);
  if (nargin>2)
-   CMAP=varargin{1};
- else
+   options=varargin{1};
+ else 
+   options=struct(); # empty struct, defaults apply
    printf('using default color map: bone(64);\n');
+   options.colormap=flipud(bone(64));
+   yname=cell(m,1);
+   for i=1:m
+     yname{i}=sprintf("RandomVariable%i",i);
+   endfor
+   options.names=yname;
+ endif
+ if isfield(options,"colormap")   
+   CMAP=options.colormap;
+ else
+   # in case an options argument was actually supplied, but doesn't contain this option.
    CMAP=flipud(bone(64));
- end%if
+ endif
  colormap(CMAP);
  c=size(CMAP,1);
  printf('range: [%i,%i]\n',s(1),s(n));
@@ -30,13 +42,25 @@ function pcplotV(Sample,P,varargin)
    warning('color_order < 0 detected (corrected).');
    color_order
  end%if
- clf;
  cla;
  hold on;
  set(gca,'ColorOrder',color_order); 
  plot(Sample(:,I),[1:m]);
  ylim([0,m]+0.5);
+ YL=get(gca,'ylabel');
+ set(gca,"ytick",1:m);
+ set(gca,"tickdir","out");
+ set(gca,"yticklabel",[]);
+ if isfield(options,"names")
+   YLstring=get(YL,'string');
+   YLpos=get(YL,'position');
+   NameLabels=options.names;
+   ytlh=text(YLpos(1)*ones(1,m),1:m,NameLabels);
+   set(ytlh,'horizontalalignment','right','verticalalignment','middle');
+ endif
+ set(gca,"ygrid", "on");
+ set(gca,"gridcolor",[0.7,0.7,0.7]);
+ set(gca,"gridlinestyle",":");
  box on;
- grid on; 
  hold off;
 end%function

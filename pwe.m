@@ -15,16 +15,17 @@ function [varargout]=pwe(val,dval,varargin)
   %%                    pwe(value,error,'E','e') prints 1.20(30)e-4
   %%                    pwe(value,error,'E',[])  prints 1.20(30)E-4
   %%  {'pre_sep_post'}  allows more customization
-  %%                    value is a cell(3,1) of strings
-  %%                    prints: PreValueSepMagnitudePost
-  %%                    pwe(12e-5,3e-5,'pre_sep_post',{'','×10^{','}'})
-  %%                    prints 1.20(30)×10^{-4}
+  %%                    the value is a cell(4,1) array of strings
+  %%                    {pre-value, separator, post-exponent, post-number}
+  %%                    Example:
+  %%                    pwe(12e-5,3e-5,'pre_sep_post',{'','×10^{','}','.'})
+  %%                    prints «1.20(30)×10^{-4}.»
   %%
-
+  %%
   if (isempty(dval) && length(val)==2)
     dval=val(2);
     val=val(1);
-  end%if
+  endif
   s=floor(log10(abs(val)));  % magnitude of value
   ds=ceil(log10(dval)); % magnitude of uncertainty
   int_dval=round(dval*10^(2-ds));
@@ -49,7 +50,7 @@ function [varargout]=pwe(val,dval,varargin)
 	x{2}='\times 10^{';
       case {'siunitx'}
 	if (nargin>3)
-	  pre='\SI{'
+	  pre='\SI{';
 	  post=sprintf('{%s}',varargin{i+1});
 	else
 	  pre='\num{';
@@ -60,12 +61,12 @@ function [varargout]=pwe(val,dval,varargin)
       otherwise
 	  printf('known options are: \n');
 	  printf('\t · %s\n',{'x','separator','E','pre_sep_post','LaTeX','siunitx'});
-    end%switch
-  end%for
+    endswitch
+  endfor
   fmt=sprintf('%s%%%i.%if(%%i)%s\n',x{1},digits+1,digits,merge(s!=0,sprintf('%s%i%s',x{2},s,x{3}),x{4}));
   if (nargout==1)
-    varargout{1}=sprintf(strtrim(fmt),val*10^(-s),int_dval);
+    varargout{1}=strtrim(sprintf(fmt,val*10^(-s),int_dval));
   else
     printf(fmt,val*10^(-s),int_dval);
-  end%if
-end%function
+  endif
+endfunction

@@ -1,7 +1,7 @@
-function get_thermodynamic_constraints(N,varargin)
+function [LawText]=get_thermodynamic_constraints(N,varargin)
   ## Andrei Kramer <andreikr@kth.se>
   ##
-  ## Usage: get_thermodynamic_constraints(N,[ParNames])
+  ## Usage: get_thermodynamic_constraints(N,[ParNames],[opt])
   ##
   ## Arguments
   ##
@@ -29,16 +29,28 @@ function get_thermodynamic_constraints(N,varargin)
   R=columns(N); # number of reactions
   n=rows(N);
   k=rank(N);
-  if (nargin>1)
-    knames=varargin{1};
-    assert(R==length(knames));
+
+  if nargin>2 && isstruct(varargin{2});
+    opt=varargin{2};
+  else
+    opt=struct(); # defaults
+  endif
+
+  if nargin>1 && not(isempty(varargin{1})) && iscell(varargin{1}) && length(varargin{1})>1
+      knames=varargin{1};
+      assert(R==length(knames));
   else
     knames=cell(R,1);
-    for i=1:R
-      knames{i}=sprintf("K(%i)",i);
-    endfor
+    if isfield(opt,'fractions') && opt.fractions
+      for i=1:R
+	knames{i}=sprintf("(kf_%i/kr_%i)",i,i);
+      endfor
+    else
+      for i=1:R
+	knames{i}=sprintf("K%i",i);
+      endfor
+    endif
   endif
-  
   l=false(1,R); 
   A=[]; 
   for i=1:R
@@ -78,15 +90,37 @@ function get_thermodynamic_constraints(N,varargin)
   printf("K(i)=kf(i)/kb(i) [etc.]\n"); % [1] eq. (4)
 
   %% the following block is an interpretation of [1] eq. (45)
-  for i=1:length(j_Z)
+  L=length(j_Z);
+  LawText=cell(L,1);
+  for i=1:L
     a=j_Z(i);
-    printf("%s=1",knames{a});
+    S=sprintf("%s=",knames{a});
+    initial=true;
     for j=1:k
       b=j_K(j);
-      if abs(t=T(j,i))>1e-7 # so !=0
-	printf("*%s^{%g}",knames{b},t);
+      if abs(t=T(j,i))>1e-7 # so, not 0
+	Et=sprintf('^(%i)',t);
+	S=strcat(S,sprintf("%s%s%s",merge(initial,'','*'),knames{b},merge(not(t==1),Et,'')));
+	initial=false;
       endif
     endfor
-    printf(";\n");
+    S=strcat(S,sprintf(";\n"));
+    printf(S);
+    LawText{i}=S;
+  endfor
+  if isfield(opt,'transform') && opt.transform
+    LawText=transform(LawText);
+  endif
+endfunction
+
+
+function [LawText]=transform(LawText)
+  L=length(LawText);
+  for i=1:L
+    S=LawText{i};
+    S=regexprep(S,'\((\w+)/(\w+)\)\s*=\s*(.*);','$1=($3)*($2)');
+    S=regexprep(S,'\((\w+)/(\w+)\)\^[\{\(]-1[\}\)]','($2/$1)'); # in case of normal parnetheses
+    S=regexprep(S,'\((\w+)/(\w+)\)\^[\{\(]-(\d+)[\}\)]','($2/$1)^($3)'); # in case of normal parnetheses
+    LawText{i}=S;
   endfor
 endfunction

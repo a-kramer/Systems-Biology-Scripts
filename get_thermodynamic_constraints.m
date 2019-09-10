@@ -47,8 +47,8 @@ function get_thermodynamic_constraints(N,varargin)
       l(i)=true; 
     endif
   endfor
-  j_K=[1:length(l)](l);
-  j_Z=[1:length(l)](not(l));
+  j_K=find(l);
+  j_Z=find(not(l));
   
   r=false(rows(N),1);
   C=[];
@@ -61,8 +61,8 @@ function get_thermodynamic_constraints(N,varargin)
   endfor
   
   k=rank(A);
-  i_K=([1:length(r)](r))(1:k);
-  i_Y=cat(2,([1:length(r)](r))(k+1:end),[1:length(r)](!r));
+  i_K=find(r)(1:k);
+  i_Y=cat(2,find(r')(k+1:end),find(not(r')));
   
   GKK=N(i_K,j_K);
   GKZ=N(i_K,j_Z);

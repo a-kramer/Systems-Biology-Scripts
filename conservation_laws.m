@@ -1,4 +1,4 @@
-function N=conservation_laws(Model,varargin)
+function [n,N]=conservation_laws(Model,varargin)
 ## Andrei Kramer <andreikr@kth.se>
 ##
 ## Usage 1: N=conservation_laws(Model,['test'])
@@ -18,7 +18,7 @@ function N=conservation_laws(Model,varargin)
 ##  substances: cell array of strings (substance names)
 
 
-if !isstruct(Model) && isnumeric(Model)
+if not(isstruct(Model)) && isnumeric(Model)
   N=Model;
   ns=rows(N);
  if nargin>1 && length(varargin{1})==ns
@@ -48,7 +48,7 @@ elseif isstruct(Model) && isfield(Model,'f')
 endif
 
 n=get_laws(N,substances,user_x0);
-if (nargin>1 && strcmp(varargin{1},'test'))
+if (nargin>1 && length(varargin{1})==1 && strcmp(varargin{1},'test'))
  p=rand(Model.np,1);
  x0=rand(Model.ns,1);
  t=linspace(0,1,64);
@@ -85,9 +85,10 @@ for i=c:-1:1
  for j=1:2
   I=find(Y{i,j});
   for k=1:length(I)
+    =abs(n_rref(I(k),i));
    printf("%s %s%s ",merge(j==1 && k==1,'',s(j)),...
-                      merge(abs(n_rref(I(k),i))>1,sprintf("%i·",abs(n_rref(I(k),i))),''),...
-                      substances{I(k)});
+          merge(n>1,sprintf("%i·",abs(n_rref(I(k),i))),''),...
+          substances{I(k)});
   endfor
  endfor
  if isfinite(x0)

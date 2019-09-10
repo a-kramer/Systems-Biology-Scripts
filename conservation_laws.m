@@ -12,29 +12,42 @@ function N=conservation_laws(Model,varargin)
 ##
 ## returns stoichiometry matrix N
 ##
-## Usage 2: conservation_laws(N,[substances])
+## Usage 2: conservation_laws(N,[substances],[initial conditions])
 ## where
 ##           N: known stoichiometry matrix
 ##  substances: cell array of strings (substance names)
 
 
 if !isstruct(Model) && isnumeric(Model)
- N=Model;
- if nargin>1
+  N=Model;
+  ns=rows(N);
+ if nargin>1 && length(varargin{1})==ns
   substances=varargin{1};
  else
-  ns=rows(N);
   s=strsplit(sprintf("x_%i,",[1:ns]),',');
   substances=s(1:ns);
  endif
+ if nargin>2
+   user_x0=varargin{2};
+   assert(length(user_x0)==ns);
+   assert(isfinite(user_x0));
+ else
+   user_x0=NA(ns,1);
+ endif
 elseif isstruct(Model) && isfield(Model,'f')
  ## get stoichiometry from fluxes 
- N=get_stoichiometry(Model);
+  N=get_stoichiometry(Model);
+  ns=Model.ns
  substances=Model.x_names;
- ns=Model.ns;
+ if isfield(Model,'x0')
+   user_x0=Model.x0;
+ else
+   user_x0=NA(ns,1);
+ endif
+ assert(rows(N)==Model.ns);
 endif
 
-n=get_laws(N,substances);
+n=get_laws(N,substances,user_x0);
 if (nargin>1 && strcmp(varargin{1},'test'))
  p=rand(Model.np,1);
  x0=rand(Model.ns,1);
@@ -46,7 +59,7 @@ endif
 
 endfunction
 
-function n_rref=get_laws(N,substances)
+function n_rref=get_laws(N,substances,x0)
 # given a cell array of substance names and stoichimetric matrix N
 # this function finds conservation laws in the reaction system
 # Usage:
@@ -77,7 +90,12 @@ for i=c:-1:1
                       substances{I(k)});
   endfor
  endfor
- printf("= const.\n"); 
+ if isfinite(x0)
+   C=x0'*n_rref(:,i);
+   printf("= %f\n",C);
+ else
+   printf("= const.\n");
+ endif
 endfor
 printf("the constants can be determined from the initial conditions of the system.\n");
 endfunction

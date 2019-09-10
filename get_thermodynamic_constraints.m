@@ -22,12 +22,13 @@ function get_thermodynamic_constraints(N,varargin)
   ##         decribed by column i of the stoichiometry N.
   ##
   ## implementation of algorithm described in
-  ##   Vlad, Marcel O., and John Ross. "Thermodynamically based constraints for rate coefficients of large biochemical networks." 
+  ##  [1] Vlad, Marcel O., and John Ross. "Thermodynamically based constraints for rate coefficients of large biochemical networks." 
   ##   Wiley Interdisciplinary Reviews: Systems Biology and Medicine 1.3 (2009): 348-358.
  
 
   R=columns(N); # number of reactions
-  
+  n=rows(N);
+  k=rank(N);
   if (nargin>1)
     knames=varargin{1};
     assert(R==length(knames));
@@ -40,7 +41,7 @@ function get_thermodynamic_constraints(N,varargin)
   
   l=false(1,R); 
   A=[]; 
-  for i=1:length(l)
+  for i=1:R
     B=cat(2,A,N(:,i)); 
     if rank(B)==min(size(B))
       A=B; 
@@ -50,9 +51,9 @@ function get_thermodynamic_constraints(N,varargin)
   j_K=find(l);
   j_Z=find(not(l));
   
-  r=false(rows(N),1);
+  r=false(n,1);
   C=[];
-  for i=1:length(r)
+  for i=1:n
     B=cat(1,C,A(i,:)); 
     if rank(B)==min(size(B))
       C=B; 
@@ -60,26 +61,28 @@ function get_thermodynamic_constraints(N,varargin)
     endif
   endfor
   
-  k=rank(A);
-  i_K=find(r)(1:k);
+  i_K=find(r,k);
   i_Y=cat(2,find(r')(k+1:end),find(not(r')));
   
-  GKK=N(i_K,j_K);
+  GKK=N(i_K,j_K); %
   GKZ=N(i_K,j_Z);
   GYK=N(i_Y,j_K);
   GYZ=N(i_Y,j_Z);
   
   T=GKK\GKZ;
+  display(size(T))
   ## the assumption is that if a reaction i does not have a simple kf
-  ## and kb, then the KD of that reaction K(i) does not exist in that
+  ## and kb, then the K of that reaction K(i) does not exist in that
   ## simple form. Then K(i) may not participate in any relation
   ## printed below, those lines should be discarded.
-  printf("K(i)=kf(i)/kb(i) [etc.]\n");
+  printf("K(i)=kf(i)/kb(i) [etc.]\n"); % [1] eq. (4)
+
+  %% the following block is an interpretation of [1] eq. (45)
   for i=1:length(j_Z)
     a=j_Z(i);
     printf("%s=1",knames{a});
-    for j=1:length(i_K)
-      b=i_K(j);
+    for j=1:k
+      b=j_K(j);
       if abs(t=T(j,i))>1e-7 # so !=0
 	printf("*%s^{%g}",knames{b},t);
       endif

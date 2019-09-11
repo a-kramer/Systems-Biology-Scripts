@@ -1,24 +1,16 @@
-function [h,lh]=colorline_plot(x,Sample,P,varargin)
-  %% Usage: colorline_plot(x,Sample,P,[options])
+function pcplotV(Sample,P,varargin)
+  %% Usage: pcplot(Sample,P,[options])
+  %% returns a figure handle to a parallel coordinate plot of a sample
+  %% the lines are sorted by using their probability values P.
+  %% Sample should be a list of column vectors, each representing one sampled point
+  %% each column of Sample corresponds to one probability number in P
+  %% size(Sample,2)==length(P);
+  %% Sample has more columns than rows;
   %%
-  %% x maps to rows of Sample (lines): x(i) → Sample(i,:)
-  %%
-  %% Sample is a set of sampled one dimensional lines Sample(:,j),
-  %% where j enumerates sample members; Each line has a
-  %% probability/weight P(j);
-  %%
-  %% size(Sample,2)==length(P); length(x)==size(Sample,1);
-  %%
-  %% The lines are coloured using the range of these weights; from
-  %% min(P) to max(P). The lines will be reordered such that the most
-  %% probable line (heighest weight) is drawn last and covers the less
-  %% probable lines.
-  %%
-  %% the last argument is an optional options struct with the fields:
-  %% options.{colormap,legend}, where «colormap» is applied to the lines
-  %% using the 'ColorOrder' property of the axis object and «legend» is
-  %% applied to the last line (highest weight).
-    assert(size(Sample,2)==size(P,2) && size(Sample,3)==size(P,3));
+  %% Options: options.colormap -- colormap, default is bone(64);
+  %%          options.names -- cell aray of names to be placed on the y ticks
+  %%          
+  assert(size(Sample,2)==size(P,2) && size(Sample,3)==size(P,3));
   sz=size(Sample);
   o=size(Sample,3);
 
@@ -28,6 +20,11 @@ function [h,lh]=colorline_plot(x,Sample,P,varargin)
     options=struct(); % empty struct, defaults apply
     fprintf('using default color map: bone(64);\n');
     options.colormap=flipud(bone(64));
+    yname=cell(sz(1),1);
+    for i=1:sz(1)
+      yname{i}=sprintf('RandomVariable%i',i);
+    end%for
+    options.names=yname;
   end%if
   
   if isfield(options,'sortmap')
@@ -89,12 +86,26 @@ function [h,lh]=colorline_plot(x,Sample,P,varargin)
   hold on;
   set(gcf,'defaulttextinterpreter','none');
   set(gca,'ColorOrder',color_order);
-  h=plot(x,S);
-  if (isfield(options,'legend') && ischar(options.legend))
-    lh=legend(h(end%),options.legend);
+  %%
+  %% the plot command is below this line
+  plot(S,[1:m]);
+  %%
+  ylim([0,m]+0.5);
+  YL=get(gca,'ylabel');
+  set(gca,'ytick',1:m);
+  set(gca,'tickdir','out');
+  set(gca,'yticklabel',[]);
+  if isfield(options,'names')
+    YLstring=get(YL,'string');
+    YLpos=get(YL,'position');
+    NameLabels=options.names;
+    ytlh=text(YLpos(1)*ones(1,m),1:m,NameLabels);
+    set(ytlh,'horizontalalignment','right','verticalalignment',
+	'middle');
   end%if
   set(gca,'ygrid', 'on');
   set(gca,'gridcolor',[0.7,0.7,0.7]);
   set(gca,'gridlinestyle',':');
   box on;
-end%function
+  %%hold off;
+end%%function

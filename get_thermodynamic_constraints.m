@@ -165,7 +165,7 @@ function [knames]=make_new_names(R,opt)
   if isfield(opt,'fractions') && opt.fractions
     switch (opt.style)
       case 'c'
-	fmt="(kf[%i]/kf[%i])";
+	fmt="(kf[%i]/kr[%i])";
       case 'latex'
 	fmt="\frac{k_{\text{f},%i}}{k_{\text{r},%i}}";
       case 'octave'
@@ -226,15 +226,16 @@ function [LawText]=transform(LawText,opt)
   for i=1:L
     S=LawText{i};
     if isfield(opt,"fractions") && opt.fractions
-      S=regexprep(S,'\(([\w\[\]\(\)]+)/([\w\[\]\(\)]+)\)\s*=\s*(.*);','$1=($3)*($2)');
-      S=regexprep(S,'\(([\w\[\]\(\)]+)/([\w\[\]\(\)]+)\)\^[\{\(]-1[\}\)]','($2/$1)'); # in case of normal parnetheses
-      S=regexprep(S,'\(([\w\[\]\(\)]+)/([\w\[\]\(\)]+)\)\^[\{\(]-(\d+)[\}\)]','($2/$1)^($3)'); # in case of normal parnetheses
+      ##auto_generated_name_pattern="(\w+([([]\d+[])])?)"
+      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\s*=\s*(.*);','$1=($5)*($3)');
+      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\^[{(]-1[})]','($3/$1)'); # in case of normal parnetheses
+      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\^[{(]-(\d+)[})]','($3/$1)^($5)'); # in case of normal parnetheses
       if isfield(opt,"style") && strcmp(opt.style,"c")
-	S=regexprep(S,'pow\(\(([\w\[\]]+)/([\w\[\]]+)\),-1\)','($2/$1)');
-	S=regexprep(S,'pow\(\(([\w\[\]]+)/([\w\[\]]+)\),-(\d+)\)','pow($2/$1,$3)');
+	S=regexprep(S,'pow\(\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\),-1\)','($3/$1)');
+	S=regexprep(S,'pow\(\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\),-(\d+)\)','pow($3/$1,$5)');
       endif
     else
-      S=regexprep(S,'Ka([\w\[\]\(\)]+)\^[\(\{]-1[\)\}]','Kd$1');
+      S=regexprep(S,'Ka([[(]?\d*[])]?)\^[({]-1[)}]','Kd$1');
       if isfield(opt,"style") && strcmp(opt.style,"c")
 	S=regexprep(S,'pow\(Ka\[(\d+)\],-1\)','Kd[$1]');
 	S=regexprep(S,'pow\(Ka\[(\d+)\],-(\d+)\)','pow(Kd[$1],$2)');

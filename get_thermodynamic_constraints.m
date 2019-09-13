@@ -71,7 +71,9 @@ function [LawText]=get_thermodynamic_constraints(N,varargin)
   end%for
   
   i_K=find(r,k);
-  i_Y=cat(2,find(r')(k+1:end%),find(not(r')));
+  fr=find(r');
+  lfr=length(fr);
+  i_Y=cat(2,fr(k+1:lfr),find(not(r')));
   %% split the matrix N so that GKK is square and has full rank.
   GKK=N(i_K,j_K); % [1] eq. (13)
   GKZ=N(i_K,j_Z); 
@@ -84,7 +86,7 @@ function [LawText]=get_thermodynamic_constraints(N,varargin)
   %% and kb, then the K of that reaction K(i) does not exist in that
   %% simple form. Then K(i) may not participate in any relation
   %% printed below, those lines should be discarded.
-  fprintf('Ka(i)=kf(i)/kb(i)\n'); % [1] eq. (4)
+  fprintf('Ka(i)=kf(i)/kr(i)\n'); % [1] eq. (4)
   fprintf('Kd(i)=kr(i)/kf(i) [etc.]\n'); 
   fprintf('untransformed result: \n');
   %% the following block is an interpretation of [1] eq. (45)
@@ -97,7 +99,8 @@ function [LawText]=get_thermodynamic_constraints(N,varargin)
     sep='';
     for j=1:k
       b=j_K(j);
-      if abs(t=T(j,i))>1e-7 % so, not 0
+      t=T(j,i);
+      if abs(t)>1e-7 % so, not 0
 	if (t==1)
 	  Term=knames{b};
 	else
@@ -112,7 +115,7 @@ function [LawText]=get_thermodynamic_constraints(N,varargin)
     LawText{i}=S;
   end%for
   if isfield(opt,'transform') && opt.transform
-    fprintf('The return value will be transformed bu regular expression substitution. Please check the result.\n');
+    fprintf('The return value will be transformed bu regular expression substitution. Please check the result. This will not work in every case, it highly depends on the chosen parameter names.\n');
     LawText=transform(LawText,opt);
   end%if
 end%function
@@ -122,7 +125,7 @@ function [opt]=parse_varargin(ArgCell)
   opt.transform=false;
   opt.fractions=false;
   opt.style='plain';
-  if length(ArgCell)>0
+  if ~isempty(ArgCell) && iscell(ArgCell)
     if ischar(ArgCell{1}) && mod(length(ArgCell),2)==0
       %% we have a key/value pair kind of argument list
       % make an opt struct
@@ -140,7 +143,8 @@ function [opt]=parse_varargin(ArgCell)
 	    opt.names=ArgCell{i+1};
 	end%switch
       end%for
-    elseif isstruct(o=ArgCell{1})
+    elseif isstruct(ArgCell{1})
+      o=ArgCell{1};
       if isfield(o,'transform')
 	opt.transform=logical(o.transform);
       end%if
@@ -165,7 +169,7 @@ function [knames]=make_new_names(R,opt)
   if isfield(opt,'fractions') && opt.fractions
     switch (opt.style)
       case 'c'
-	fmt='(kf[%i]/kf[%i])';
+	fmt='(kf[%i]/kr[%i])';
       case 'latex'
 	fmt='\frac{k_{\text{f},%i}}{k_{\text{r},%i}}';
       case 'octave'
@@ -226,15 +230,15 @@ function [LawText]=transform(LawText,opt)
   for i=1:L
     S=LawText{i};
     if isfield(opt,'fractions') && opt.fractions
-      S=regexprep(S,'\(([\w\[\]\(\)]+)/([\w\[\]\(\)]+)\)\s*=\s*(.*);','$1=($3)*($2)');
-      S=regexprep(S,'\(([\w\[\]\(\)]+)/([\w\[\]\(\)]+)\)\^[\{\(]-1[\}\)]','($2/$1)'); % in case of normal parnetheses
-      S=regexprep(S,'\(([\w\[\]\(\)]+)/([\w\[\]\(\)]+)\)\^[\{\(]-(\d+)[\}\)]','($2/$1)^($3)'); % in case of normal parnetheses
+      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\s*=\s*(.*);','$1=($5)*($3)');
+      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\^[{(]-1[})]','($3/$1)'); # in case of normal parnetheses
+      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\^[{(]-(\d+)[})]','($3/$1)^($5)'); # in case of normal parnetheses
       if isfield(opt,'style') && strcmp(opt.style,'c')
-	S=regexprep(S,'pow\(\(([\w\[\]]+)/([\w\[\]]+)\),-1\)','($2/$1)');
-	S=regexprep(S,'pow\(\(([\w\[\]]+)/([\w\[\]]+)\),-(\d+)\)','pow($2/$1,$3)');
+	S=regexprep(S,'pow\(\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\),-1\)','($3/$1)');
+	S=regexprep(S,'pow\(\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\),-(\d+)\)','pow($3/$1,$5)');
       end%if
     else
-      S=regexprep(S,'Ka([\w\[\]\(\)]+)\^[\(\{]-1[\)\}]','Kd$1');
+      S=regexprep(S,'Ka([[(]?\d*[])]?)\^[({]-1[)}]','Kd$1');
       if isfield(opt,'style') && strcmp(opt.style,'c')
 	S=regexprep(S,'pow\(Ka\[(\d+)\],-1\)','Kd[$1]');
 	S=regexprep(S,'pow\(Ka\[(\d+)\],-(\d+)\)','pow(Kd[$1],$2)');

@@ -225,17 +225,18 @@ function [LawText]=transform(LawText,opt)
   L=length(LawText);
   for i=1:L
     S=LawText{i};
+    NamePattern=char('(\<\w+(?:[([]\d+[])])?)');
+    FractionPattern=strcat('\(',NamePattern,'/',NamePattern,'\)');
     if isfield(opt,"fractions") && opt.fractions
-      ##auto_generated_name_pattern="(\w+([([]\d+[])])?)"
-      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\s*=\s*(.*);','$1=($5)*($3)');
-      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\^[{(]-1[})]','($3/$1)'); # in case of normal parnetheses
-      S=regexprep(S,'\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\)\^[{(]-(\d+)[})]','($3/$1)^($5)'); # in case of normal parnetheses
+      S=regexprep(S,strcat(FractionPattern,'\s*=\s*(.*);'),'$1=($3)*($2)');
+      S=regexprep(S,strcat(FractionPattern,'\^[{(]-1[})]'),'($2/$1)'); # in case of normal parnetheses
+      S=regexprep(S,strcat(FractionPattern,'\^[{(]-(\d+)[})]'),'($2/$1)^($3)'); # in case of normal parnetheses
       if isfield(opt,"style") && strcmp(opt.style,"c")
-	S=regexprep(S,'pow\(\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\),-1\)','($3/$1)');
-	S=regexprep(S,'pow\(\((\w+([([]?\d*[])]?))/(\w+([([]?\d*[])]?))\),-(\d+)\)','pow($3/$1,$5)');
+	S=regexprep(S,strcat('pow\(',FractionPattern,',-1\)'),'($2/$1)');
+	S=regexprep(S,strcat('pow\(',FractionPattern,',-(\d+)\)'),'pow($2/$1,$3)');
       endif
     else
-      S=regexprep(S,'Ka([[(]?\d*[])]?)\^[({]-1[)}]','Kd$1');
+      S=regexprep(S,'\<Ka([[(]?\d*[])]?)\^[({]-1[)}]','Kd$1');
       if isfield(opt,"style") && strcmp(opt.style,"c")
 	S=regexprep(S,'pow\(Ka\[(\d+)\],-1\)','Kd[$1]');
 	S=regexprep(S,'pow\(Ka\[(\d+)\],-(\d+)\)','pow(Kd[$1],$2)');

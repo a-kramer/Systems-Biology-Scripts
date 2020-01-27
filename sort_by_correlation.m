@@ -1,11 +1,20 @@
-function I=sort_by_correlation(cr,varargin)
+function [I]=sort_by_correlation(cr,varargin)
+  %% Usage: [I]=sort_by_correlation(cr,[n])
+  %% given a correlation matrix _cr_,
+  %% the function returns an index list
+  %% that reorders the variables from high
+  %% to low correlation.
+  %% The index list starts with the highest
+  %% absolute correlation pair and appends
+  %% the index of the variable that is most
+  %% correlated to the current end of the list.
+  %%
+  %% Optionally, the return list stops at n.
  n=size(cr);
  [j,i]=meshgrid(1:n(1),1:n(2));
- j=triu(j,1,'pack');
- i=triu(i,1,'pack');
- k=sub2ind(n,i,j);
+ k=find(triu(ones(n(1)),1));
  [cc,cci]=sort(abs(cr(k)),'descend');
- if (length(varargin)>0)
+ if not(isempty(varargin))
   m=varargin{1};
  else
   m=n(1);
@@ -17,11 +26,24 @@ function I=sort_by_correlation(cr,varargin)
   I(l)=t;
   %fprintf('l=%i, k=%i, length(j)=%i\n',l,k,length(j));
   o=((i==t)|(j==t)); % get a sorted list of indices that are highly correlated with Sample member k
-  if (length(o)>0)
-   s=merge(i(o)==t,j(o),i(o));
+  if ~isempty(o)
+   s=Merge(i(o)==t,j(o),i(o));
    t=s(1);
-   j(o)=[]; % delete all pairs that involve current index k
+   j(o)=[]; % delete all pairs that involve current index
    i(o)=[]; %
   end%if
  end%for
+end%function
+
+function r=Merge(c,t,f)
+  N=length(c);
+  r=NaN(1,N);
+  assert(islogical(c));
+  for i=1:N
+    if c(i)
+      r(i)=t(i);
+    else
+      r(i)=f(i);
+    end
+  end%for
 end%function

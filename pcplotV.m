@@ -100,7 +100,7 @@ function pcplotV(Sample,P,varargin)
     YLpos=get(YL,'position');
     NameLabels=options.names;
     ytlh=text(YLpos(1)*ones(1,m),1:m,NameLabels);
-    set(ytlh,'horizontalalignment','right','verticalalignment',
+    set(ytlh,'horizontalalignment','right','verticalalignment',...
 	'middle');
   endif
   set(gca,"ygrid", "on");

@@ -48,18 +48,6 @@ function pcplotV(Sample,P,varargin)
     P=reshape(P,1,[]);
   endif
   [m,n]=size(S);
-  if (nargin>2)
-    options=varargin{1};
-  else
-    options=struct(); # empty struct, defaults apply
-    printf('using default color map: bone(64);\n');
-    options.colormap=flipud(bone(64));
-    yname=cell(m,1);
-    for i=1:m
-      yname{i}=sprintf("RandomVariable%i",i);
-    endfor
-    options.names=yname;
-  endif
   if isfield(options,"colormap")
     CMAP=options.colormap;
   else

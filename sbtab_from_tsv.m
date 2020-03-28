@@ -1,6 +1,5 @@
 #!/usr/bin/octave-cli -q
-
-function [sbtab,varargout] = sbtab_import(tsv_file)
+function [sbtab,varargout] = sbtab_from_tsv(tsv_file)
   ##
   ## Usage: [sbtab] = sbtab_import(tsv_cstr)
   ##
@@ -12,27 +11,30 @@ function [sbtab,varargout] = sbtab_import(tsv_file)
   str=fgetl(tsv);
   [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*Document='([^']+)'",'match','tokens','once');
   DocumentName=RE.tokens{1};
-  Table.Document=DocumentName;
-  ## Table Properties
-  [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*TableName='([^']+)'",'match','tokens','once');
-  Table.Name=RE.tokens{1};
-  ##
-  [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*TableType='([^']+)'",'match','tokens','once');
-  Table.Type=RE.tokens{1};
-  ##
-  [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*TableTitle='([^']+)'",'match','tokens','once');
-  Table.Title=RE.tokens{1};
-  ## Print Information
   printf("Importing from file «%s» part of Document «%s»\n",tsv_file,DocumentName);
-  printf("\tTable Name: «%s»\n",Table.Name);
-  printf("\tTable Type: «%s»\n",Table.Type);
-  printf("\tTable Title: «%s»\n",Table.Title);
+  ## Table Properties
   if (nargout>1)
+    Table.Document=DocumentName;
+    [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*TableName='([^']+)'",'match','tokens','once');
+    Table.Name=RE.tokens{1};
+    ##
+    [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*TableType='([^']+)'",'match','tokens','once');
+    Table.Type=RE.tokens{1};
+    ##
+    [RE.match,RE.tokens]=regexp(str,"^!!SBtab.*TableTitle='([^']+)'",'match','tokens','once');
+    Table.Title=RE.tokens{1};
+    ## Print Information
+    printf("\tTable Name: «%s»\n",Table.Name);
+    printf("\tTable Type: «%s»\n",Table.Type);
+    printf("\tTable Title: «%s»\n",Table.Title);
     varargout{1}=Table;
   endif
-  
   ## Header
   str=fgetl(tsv);
+  cmnt=strfind(str,"%");
+  if ~isempty(cmnt)
+    str=str(1:cmnt-1);
+  endif
   printf("processing column header: «%s»\n",str);
   header=linetocstr(str);
   assert(~isempty(header));
@@ -63,10 +65,13 @@ endfunction
 
 function [cstr]=linetocstr(str)
   cstr=[];
-  not_a_comment=isempty(regexp(str,"^\\s*%",'start','once'));
-  if not_a_comment
+  cmnt=strfind(str,"%");
+  if ~isempty(cmnt)
+    str=strtrim(str(1:cmnt-1));
+  endif
+  if ~isempty(str)
     cstr=ostrsplit(str,"\t");
   else
-    printf("skipping comment line: «%s»\n",str);
+    printf("skipping comment line.\n");
   endif    
 endfunction

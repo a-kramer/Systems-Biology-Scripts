@@ -13,87 +13,67 @@ function pcplotV(Sample,P,varargin)
   assert(columns(Sample)==columns(P) && size(Sample,3)==size(P,3));
   sz=size(Sample);
   o=size(Sample,3);
-
   if (nargin>2)
     options=varargin{1};
   else
-    options=struct(); # empty struct, defaults apply
-    printf('using default color map: bone(64);\n');
-    options.colormap=flipud(bone(64));
-    yname=cell(sz(1),1);
-    for i=1:sz(1)
-      yname{i}=sprintf("RandomVariable%i",i);
-    endfor
-    options.names=yname;
+    options=default_options(sz(1));
   endif
-  
   if isfield(options,"sortmap")
     [~,I]=sort(options.sortmap(P),2);
   else
     [~,I]=sort(P,2);
   endif
-  ## deal with nd arrays:
-  S=NA(sz); # same size as Sample
-  for i=1:o
-    Ii=I(1,:,i);
-    S(:,:,i)=Sample(:,Ii,i);
-    P(1,:,i)=P(1,Ii,i);
-  endfor
-  if o>1
-    # transpose
-    S=permute(S,[1,3,2]);
-    P=permute(P,[1,3,2]);
-    # reshape
-    S=reshape(S,sz(1),[]);
-    P=reshape(P,1,[]);
-  endif
+  [S,P]=from_nd_array(Sample,P)
   [m,n]=size(S);
-  if isfield(options,"colormap")
-    CMAP=options.colormap;
-  else
-    CMAP=flipud(bone(64));
-  endif
+  CMAP=options.colormap;
   colormap(CMAP);
-  c=size(CMAP,1);
-  r=[min(P),max(P)];
-  caxis(r);
-  printf('range: [%i,%i]\n',r);
-  lsc=linspace(r(1),r(2),c);
-  color_order=interp1(lsc,CMAP,P,'linear');
-  if any(color_order(:)>1)
-    color_order(color_order>1)=1; # why does this happen sometimes?
-    warning('color_order > 1 detected (corrected).');
-    color_order
-  end%if
-  if any(color_order(:)<0)
-    color_order(color_order<0)=0;
-    warning('color_order < 0 detected (corrected).');
-    color_order
-  end%if
+  color_order=configure_colors(CMAP,min(P),max(P));
   cla;
   hold on;
   set(gcf,'defaulttextinterpreter','none');
   set(gca,'ColorOrder',color_order);
   %%
-  %% the plot command is below this line
   plot(S,[1:m]);
   %%
   ylim([0,m]+0.5);
-  YL=get(gca,'ylabel');
   set(gca,"ytick",1:m);
-  set(gca,"tickdir","out");
-  set(gca,"yticklabel",[]);
-  if isfield(options,"names")
-    YLstring=get(YL,'string');
-    YLpos=get(YL,'position');
-    NameLabels=options.names;
-    ytlh=text(YLpos(1)*ones(1,m),1:m,NameLabels);
-    set(ytlh,'horizontalalignment','right','verticalalignment',...
-	'middle');
-  endif
+  Labels(options.names);
   set(gca,"ygrid", "on");
   set(gca,"gridcolor",[0.7,0.7,0.7]);
   set(gca,"gridlinestyle",":");
   box on;
   %%hold off;
-end%function
+endfunction
+
+function [color_order]=configure_colors(CMAP,minP,maxP)
+  c=size(CMAP,1);
+  r=[minP,maxP];
+  caxis(r);
+  printf('range: [%i,%i]\n',r);
+  lsc=linspace(r(1),r(2),c);
+  color_order=fix_colormap(interp1(lsc,CMAP,P,'linear'));
+endfunction
+
+function Labels(names)
+  set(gca,"tickdir","out");
+  set(gca,"yticklabel",[]);
+  YL=get(gca,'ylabel');
+  YLstring=get(YL,'string');
+  YLpos=get(YL,'position');
+  NameLabels=names;
+  ytlh=text(YLpos(1)*ones(1,m),1:m,NameLabels);
+  set(ytlh,'horizontalalignment','right','verticalalignment','middle');
+endfunction
+
+function [options]=default_options(m)
+  ## Usage: [options]=default_options(m)
+  ##  m: number of parameters
+    options=struct(); 
+    printf('using default color map: bone(64);\n');
+    options.colormap=flipud(bone(64));
+    yname=cell(m,1);
+    for i=1:m
+      yname{i}=sprintf("RandomVariable%i",i);
+    endfor
+    options.names=yname;
+endfunction

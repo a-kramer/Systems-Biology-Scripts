@@ -25,7 +25,8 @@ for ((i=0;i<n;i++)); do
 	echo "warning: id not found in «${svstr}»"
     fi
     if [[ $svstr =~ name=\"([^\"]+)\" ]]; then
-	name[i]="${BASH_REMATCH[1]}"
+	name[i]="${BASH_REMATCH[1]//[ ]/}"
+	# also strip all spaces from names
     else
 	echo "warning: name not found in «${svstr}»"
 	name[i]="${tag}_${I}"
@@ -36,13 +37,14 @@ for ((i=0;i<n;i++)); do
 done
 
 # part of the sbml insanity is this:
-# <math xmlns="http://www.w3.org/1998/Math/MathML"> 
+# 
 # according to the FAQ (http://sbml.org/Documents/FAQ#What_is_the_symbol_for_time_in_SBML.3F) 
-# time is this in sbml:      
+# _time_ is this in sbml:      
 #      <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> 
 #           t 
 #      </csymbol> 
-sed -E -i -e 's/<ci>\s*time\s*<\/ci>/<csymbol encoding="text" definitionURL="http:\/\/www.sbml.org\/sbml\/symbols\/time">time<\/csymbol>/g' ${FILE}
+# where t can be any string, so ...
+sed -E -i -e 's|<ci>\s*time\s*</ci>|<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time">time</csymbol>|g' ${FILE}
 
 
 echo "id: ${id[*]}"
